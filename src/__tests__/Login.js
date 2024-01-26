@@ -48,6 +48,36 @@ describe("Given that I am a user on login page", () => {
     });
   });
 
+  describe("Given that the login fails", () => {
+    test("calls createUser method", async () => {
+      document.body.innerHTML = LoginUI();
+
+      const mockedLogin = jest
+        .fn()
+        .mockRejectedValue(new Error("Login failed"));
+      const mockedCreateUser = jest.fn();
+
+      const onNavigate = jest.fn(() => {});
+
+      const login = new Login({
+        document,
+        localStorage: window.localStorage,
+        onNavigate,
+      });
+      login.login = mockedLogin;
+      login.createUser = mockedCreateUser;
+
+      const form = screen.getByTestId("form-employee");
+      const handleSubmit = jest.fn((e) => e.preventDefault());
+      form.addEventListener("submit", handleSubmit);
+      fireEvent.submit(form);
+
+      await new Promise((r) => setTimeout(r, 10));
+
+      expect(login.createUser).toHaveBeenCalled();
+    });
+  });
+
   describe("When I do fill fields in correct format and I click on employee button Login In", () => {
     test("Then I should be identified as an Employee in app", () => {
       document.body.innerHTML = LoginUI();
