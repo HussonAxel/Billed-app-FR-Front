@@ -86,30 +86,35 @@ export default class {
   }
 
   handleEditTicket(e, bill, bills) {
+    this.updateSelectedBill(bill, bills);
+    this.registerEventHandlers(bill, bills);
+  }
+
+  selectBill(bill, bills, selectedBillId, selectedColor, unselectedColor, rightContainerHTML, navbarHeight) {
+    bills.forEach((b) => {
+      let color = (b.id === selectedBillId) ? selectedColor : unselectedColor;
+      $(`#open-bill${b.id}`).css({ background: color });
+    });
+    $('.dashboard-right-container div').html(rightContainerHTML);
+    $('.vertical-navbar').css({ height: navbarHeight });
+    this.selectedBillId = selectedBillId;
+  }
+
+  updateSelectedBill(bill, bills) {
     const currentSelectedBillId = this.selectedBillId;
-  
     if (currentSelectedBillId === bill.id) {
-      $(`#open-bill${bill.id}`).css({ background: '#0D5AE5' });
-      $('.dashboard-right-container div').html(`
-        <div id="big-billed-icon" data-testid="big-billed-icon"> ${BigBilledIcon} </div>
-      `);
-      $('.vertical-navbar').css({ height: '120vh' });
-      
-      this.selectedBillId = null;
+      const bigBilledIconHtml = `<div id="big-billed-icon" data-testid="big-billed-icon"> ${BigBilledIcon} </div>`;
+      this.selectBill(bill, bills, null, '#2a2b35', '#0D5AE5', bigBilledIconHtml, '120vh');
     } else {
-      bills.forEach((b) => {
-        $(`#open-bill${b.id}`).css({ background: '#0D5AE5' });
-      });
-      $(`#open-bill${bill.id}`).css({ background: '#2A2B35' });
-      $('.dashboard-right-container div').html(DashboardFormUI(bill));
-      $('.vertical-navbar').css({ height: '150vh' });
-  
-      this.selectedBillId = bill.id;
+      this.selectBill(bill, bills, bill.id, '#2a2b35', '#0D5AE5', DashboardFormUI(bill), '150vh');
     }
-  
+  }
+
+  registerEventHandlers(bill, bills) {
     bills.forEach(b => {
       $(`#open-bill${b.id}`).off('click').click((e) => this.handleEditTicket(e, b, bills));
     });
+
     $('#icon-eye-d').off('click').click(this.handleClickIconEye);
     $('#btn-accept-bill').off('click').click((e) => this.handleAcceptSubmit(e, bill));
     $('#btn-refuse-bill').off('click').click((e) => this.handleRefuseSubmit(e, bill));

@@ -19,17 +19,15 @@ const row = (bill) => {
     `)
   }
 
-  const rows = (data) => {
-    if (data && data.length) {
-      const sortedBills = data.sort((a, b) => new Date(b.date) - new Date(a.date));
-      return sortedBills.map(bill => row(bill)).join("")
-    } else {
-      return ""
-    }
-  }
+const sortByDateDesc = (a, b) => new Date(b.date) - new Date(a.date);
+
+const rows = (data = []) => {
+  const sortedBills = data.sort(sortByDateDesc);
+  return sortedBills.map(bill => row(bill)).join("");
+}
 
 export default ({ data: bills, loading, error }) => {
-  
+
   const modal = () => (`
     <div class="modal fade" id="modaleFile" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
@@ -52,7 +50,7 @@ export default ({ data: bills, loading, error }) => {
   } else if (error) {
     return ErrorPage(error)
   }
-  
+
   return (`
     <div class='layout'>
       ${VerticalLayout(120)}
