@@ -18,7 +18,6 @@ export default class NewBill {
   handleChangeFile = e => {
     e.preventDefault()
     const file = this.document.querySelector(`input[data-testid="file"]`).files[0]
-    const fileInput = this.document.querySelector(`input[data-testid="file"]`)
     const filePath = e.target.value.split(/\\/g)
     const fileName = filePath[filePath.length-1]
     const formData = new FormData()
@@ -26,32 +25,20 @@ export default class NewBill {
     formData.append('file', file)
     formData.append('email', email)
 
-
-    const validFileType = ['.jpg', '.png', '.jpeg']
-    const fileExtension = fileName.substring(fileName.lastIndexOf('.')).toLowerCase()
-    const isValidFileType = validFileType.indexOf(fileExtension) !== -1
-    if (!isValidFileType) {
-      alert('Type de fichier non valide. Veuillez sélectionner un fichier .jpg, .png ou .jpeg')
-      fileInput.value = "";
-      return
-    } 
-    
-    
-
     this.store
-      .bills()
-      .create({
-        data: formData,
-        headers: {
-          noContentType: true
-        }
-      })
-      .then(({fileUrl, key}) => {
-        console.log(fileUrl)
-        this.billId = key
-        this.fileUrl = fileUrl
-        this.fileName = fileName
-      }).catch(error => console.error(error))
+        .bills()
+        .create({
+          data: formData,
+          headers: {
+            noContentType: true
+          }
+        })
+        .then(({fileUrl, key}) => {
+          console.log(fileUrl)
+          this.billId = key
+          this.fileUrl = fileUrl
+          this.fileName = fileName
+        }).catch(error => console.error(error))
   }
   handleSubmit = e => {
     e.preventDefault()
@@ -78,12 +65,12 @@ export default class NewBill {
   updateBill = (bill) => {
     if (this.store) {
       this.store
-      .bills()
-      .update({data: JSON.stringify(bill), selector: this.billId})
-      .then(() => {
-        this.onNavigate(ROUTES_PATH['Bills'])
-      })
-      .catch(error => console.error(error))
+          .bills()
+          .update({data: JSON.stringify(bill), selector: this.billId})
+          .then(() => {
+            this.onNavigate(ROUTES_PATH['Bills'])
+          })
+          .catch(error => console.error(error))
     }
   }
 }

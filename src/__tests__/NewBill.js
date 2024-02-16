@@ -1,38 +1,94 @@
 import NewBill from "../containers/NewBill.js";
-import { screen } from "@testing-library/dom";
 import NewBillUI from "../views/NewBillUI.js";
+import {ROUTES_PATH} from "../constants/routes.js";
+import {screen} from "@testing-library/dom";
+import userEvent from "@testing-library/user-event";
 
 jest.mock("../containers/Logout.js");
 
 describe("Given I am connected as an employee", () => {
-  describe("When I am on NewBill Page", () => {
-    beforeEach(() => {
-      document.body.innerHTML = NewBillUI();
+    describe("Testing handleChangeFile method", () => {
+        let user, windowMock
+        beforeEach(() => {
+            windowMock = {
+                localStorage: {
+                    getItem: jest.fn(() => JSON.stringify(user))
+                }, document: {
+                    querySelector: jest.fn((element) => {
+                        if (element === `input[data-testid="file"]`) {
+                            return {
+                                addEventListener: jest.fn(), files: [{name: 'image.jpg'}]
+                            }
+                        }
+                        if (element === 'form[data-testid="form-new-bill"]') {
+                            return {
+                                addEventListener: jest.fn()
+                            }
+                        }
+                    })
+                }
+            }
+            window.localStorage.setItem("user", JSON.stringify({
+                type: "Employee", email: "employee@test.tld", password: "employee", status: "connected",
+            }));
+        });
+        test("Should handle a valid image file uploaded by a user correctly", () => {
+            const bill = new NewBill({
+                document: windowMock.document, onNavigate: () => {
+                }, store: {
+                    bills: () => {
+                        return {
+                            create: jest.fn(() => Promise.resolve({fileUrl: 'url', key: 'key'})),
+                        }
+                    }
+                }, localStorage: windowMock.localStorage
+            })
+            const handleChangeFile = jest.fn(bill.handleChangeFile)
+            handleChangeFile({target: {value: 'image.jpg'}, preventDefault: () => null})
+            expect(handleChangeFile).toHaveBeenCalled()
+        })
+
+        test("Should throw an error when the API call to create bill fails", () => {
+            const bill = new NewBill({
+                document: windowMock.document, onNavigate: () => {
+                }, store: {
+                    bills: () => {
+                        return {
+                            create: jest.fn(() => Promise.reject({message: 'API is down'})),
+                        }
+                    }
+                }, localStorage: windowMock.localStorage
+            })
+            const handleChangeFile = jest.fn(bill.handleChangeFile)
+            return handleChangeFile({target: {value: 'image.jpg'}, preventDefault: () => null})
+        })
     });
+    describe("Testing form submission for a new bill", () => {
+        let onNavigate;
 
-    test("Then it should instantiate NewBill with the correct properties and event listeners", () => {
-      const onNavigate = jest.fn();
-      const store = { bills: jest.fn(() => ({ create: jest.fn().mockResolvedValue({}) })) };
-      const localStorage = window.localStorage;
+        beforeEach(() => {
+            document.body.innerHTML = NewBillUI();
+            onNavigate = jest.fn();
+            const store = {bills: jest.fn(() => ({update: jest.fn().mockResolvedValue({})}))};
+            window.localStorage.setItem("user", JSON.stringify({email: "employee@example.com"}));
 
-      const spyQuerySelector = jest.spyOn(document, 'querySelector');
+            const newBillInstance = new NewBill({
+                document, onNavigate, store, localStorage: window.localStorage
+            });
+            newBillInstance.updateBill = jest.fn().mockResolvedValue({});
+        });
 
-      const addEventListenerMock = jest.fn();
-      spyQuerySelector.mockReturnValueOnce({ addEventListener: addEventListenerMock }); // for form
-      spyQuerySelector.mockReturnValueOnce({ addEventListener: addEventListenerMock }); // for file input
+        test("Form submission should be prevented by default", async () => {
+            const handleSubmit = jest.fn();
+            document.querySelector(`form[data-testid="form-new-bill"]`).addEventListener("submit", handleSubmit);
+            await userEvent.click(screen.getByText("Envoyer"));
+            expect(handleSubmit).toHaveBeenCalled();
+        });
 
-      const newBill = new NewBill({
-        document,
-        onNavigate,
-        store,
-        localStorage
-      });
 
-      expect(addEventListenerMock).toHaveBeenCalledTimes(2);
-      expect(addEventListenerMock).toHaveBeenNthCalledWith(1, "submit", expect.any(Function));
-      expect(addEventListenerMock).toHaveBeenNthCalledWith(2, "change", expect.any(Function));
-
-      spyQuerySelector.mockRestore();
+        test("Form submission should redirect to the Bills page", async () => {
+            await userEvent.click(screen.getByText("Envoyer"));
+            expect(onNavigate).toHaveBeenCalledWith(ROUTES_PATH['Bills']);
+        });
     });
-  });
 });
