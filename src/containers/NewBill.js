@@ -18,12 +18,23 @@ export default class NewBill {
   handleChangeFile = e => {
     e.preventDefault()
     const file = this.document.querySelector(`input[data-testid="file"]`).files[0]
+    const fileInput = this.document.querySelector(`input[data-testid="file"]`)
     const filePath = e.target.value.split(/\\/g)
     const fileName = filePath[filePath.length-1]
     const formData = new FormData()
     const email = JSON.parse(localStorage.getItem("user")).email
     formData.append('file', file)
     formData.append('email', email)
+
+
+    const validFileType = ['.jpg', '.png', '.jpeg']
+    const fileExtension = fileName.substring(fileName.lastIndexOf('.')).toLowerCase()
+    const isValidFileType = validFileType.indexOf(fileExtension) !== -1
+    if (!isValidFileType) {
+      alert('Type de fichier non valide. Veuillez sélectionner un fichier .jpg, .png ou .jpeg')
+      fileInput.value = "";
+      return
+    }
 
     this.store
         .bills()
