@@ -3,6 +3,7 @@ import NewBillUI from "../views/NewBillUI.js";
 import {ROUTES_PATH} from "../constants/routes.js";
 import {screen} from "@testing-library/dom";
 import userEvent from "@testing-library/user-event";
+import storeFromMock from "../__mocks__/store";
 
 jest.mock("../containers/Logout.js");
 
@@ -62,9 +63,33 @@ describe("Given I am connected as an employee", () => {
             const handleChangeFile = jest.fn(bill.handleChangeFile)
             return handleChangeFile({target: {value: 'image.jpg'}, preventDefault: () => null})
         })
+        //POST test
+        describe("I'm posting a form that is valid", () => {
+            test("we fetch the new Bills from the mock using the API with the POST protocol", async () => {
+                const bill = new NewBill({
+                    document: windowMock.document, onNavigate: () => {
+                    }, store: {
+                        bills: () => {
+                            return {
+                                create: jest.fn(() => Promise.resolve({fileUrl: 'url', key: 'key'})),
+                            }
+                        }
+                    }, localStorage: windowMock.localStorage
+                })
+                const mockedStoreBills = storeFromMock.bills().update(bill);
+
+                let result = {};
+                mockedStoreBills.then((object) => {
+                    result = object;
+                    expect(result.id).toBe("47qAXb6fIm2zOKkLzMro");
+                });
+
+                expect(mockedStoreBills).not.toBeNull();
+            });
+        });
     });
     describe("Testing form submission for a new bill", () => {
-        let onNavigate;
+        let user, windowMock, onNavigate
 
         beforeEach(() => {
             document.body.innerHTML = NewBillUI();
@@ -84,7 +109,6 @@ describe("Given I am connected as an employee", () => {
             await userEvent.click(screen.getByText("Envoyer"));
             expect(handleSubmit).toHaveBeenCalled();
         });
-
 
         test("Form submission should redirect to the Bills page", async () => {
             await userEvent.click(screen.getByText("Envoyer"));

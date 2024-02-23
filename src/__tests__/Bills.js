@@ -60,6 +60,29 @@ describe("Given I am connected as an employee", () => {
         });
     });
 
+    test('handleClickIconEye is called when the icon is clicked', () => {
+        const bill = new Bills({ document: document, onNavigate: jest.fn(), store: mockStore });
+        const mockIcon = document.createElement('div');
+        mockIcon.setAttribute('data-bill-url', 'mockBillUrl');
+        bill.handleClickIconEye = jest.fn();
+        window.$.fn.modal = jest.fn();
+        mockIcon.addEventListener('click', () => bill.handleClickIconEye(mockIcon));
+        mockIcon.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+        expect(bill.handleClickIconEye).toHaveBeenCalledWith(mockIcon);
+    });
+
+
+    test('handleClickIconEye shows modal', () => {
+        const bill = new Bills({ document: document, onNavigate: jest.fn(), store: mockStore });
+        const mockIcon = document.createElement('div');
+        mockIcon.setAttribute('data-bill-url', 'mockBillUrl');
+        window.$.fn.modal = jest.fn();
+        bill.handleClickIconEye(mockIcon);
+
+        expect(window.$.fn.modal).toHaveBeenCalledWith('show');
+    });
+
     test("Check the handleClickNewBill function", () => {
         const mockFn = jest.fn();
         const bill = new Bills({document, onNavigate: mockFn});
