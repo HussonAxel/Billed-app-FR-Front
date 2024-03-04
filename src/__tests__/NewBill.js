@@ -12,15 +12,17 @@ describe("Given I am connected as an employee", () => {
         let user, windowMock
         beforeEach(() => {
             windowMock = {
-                localStorage: {
-                    getItem: jest.fn(() => JSON.stringify(user))
-                }, document: {
+                // Simulate user connection to localStorage
+                document: {
+                    // simulate DOM UI
                     querySelector: jest.fn((element) => {
+                        // File input
                         if (element === `input[data-testid="file"]`) {
                             return {
                                 addEventListener: jest.fn(), files: [{name: 'image.jpg'}]
                             }
                         }
+                        // Bill Validation
                         if (element === 'form[data-testid="form-new-bill"]') {
                             return {
                                 addEventListener: jest.fn()
@@ -29,13 +31,16 @@ describe("Given I am connected as an employee", () => {
                     })
                 }
             }
+            // Simulate employee connection on localstorage
             window.localStorage.setItem("user", JSON.stringify({
                 type: "Employee", email: "employee@test.tld", password: "employee", status: "connected",
             }));
         });
         test("Should handle a valid image file uploaded by a user correctly", () => {
             const bill = new NewBill({
+                // Simulate necessary DOM and navigation
                 document: windowMock.document, onNavigate: () => {
+                    // Simulate API Logic
                 }, store: {
                     bills: () => {
                         return {
@@ -44,6 +49,7 @@ describe("Given I am connected as an employee", () => {
                     }
                 }, localStorage: windowMock.localStorage
             })
+            //
             const handleChangeFile = jest.fn(bill.handleChangeFile)
             handleChangeFile({target: {value: 'image.jpg'}, preventDefault: () => null})
             expect(handleChangeFile).toHaveBeenCalled()
@@ -89,7 +95,7 @@ describe("Given I am connected as an employee", () => {
         });
     });
     describe("Testing form submission for a new bill", () => {
-        let user, windowMock, onNavigate
+        let onNavigate
 
         beforeEach(() => {
             document.body.innerHTML = NewBillUI();
