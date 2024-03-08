@@ -19,12 +19,15 @@ const row = (bill) => {
     `)
   }
 
-const sortByDateDesc = (a, b) => new Date(b.date) - new Date(a.date);
-
-const rows = (data = []) => {
-  const sortedBills = data.sort(sortByDateDesc);
-  return sortedBills.map(bill => row(bill)).join("");
-}
+  const rows = (data) => {
+    if (data && data.length) {
+      const sortedBills = data.sort(
+        (a, b) => new Date(b.date) - new Date(a.date)
+      );
+      return sortedBills.map((bill) => row(bill)).join("");
+    }
+    return "";
+  };
 
 export default ({ data: bills, loading, error }) => {
 
